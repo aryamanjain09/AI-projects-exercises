@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Excel Template Converter</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+<div class="card">
+  <h1>Excel Template Converter</h1>
+  <p class="subtitle">Convert any Excel file to match your template — same structure, mapped columns, your control.</p>
+
+  <!-- Step indicators -->
+  <div class="steps">
+    <div class="step active" id="step1">1 · Template</div>
+    <div class="step" id="step2">2 · Source Files</div>
+    <div class="step" id="step3">3 · Map Columns</div>
+    <div class="step" id="step4">4 · Download</div>
+  </div>
+
+  <!-- ── Phase 1: Template upload ──────────────────────────────────────────── -->
+  <div class="phase" id="phase1">
+    <h2>Upload your template Excel file</h2>
+    <p style="font-size:0.85rem;color:#718096;margin-bottom:14px;">
+      The template defines the column headers, their order, and any leading blank rows/columns.
+      All source files will be converted to match this structure.
+    </p>
+
+    <div class="drop-zone" id="template-zone">
+      <input type="file" id="template-input" accept=".xlsx,.xlsm" />
+      <div class="icon">📄</div>
+      <div class="label">Drag &amp; drop or <span>browse</span></div>
+      <div class="hint">.xlsx / .xlsm · max 50 MB</div>
+    </div>
+    <div style="font-size:0.83rem;color:#4a5568;margin-bottom:12px;" id="template-file-label">No file chosen</div>
+
+    <div id="template-info" class="info-box" style="display:none;"></div>
+    <div class="error-msg" id="template-error"></div>
+
+    <div class="btn-row">
+      <button class="btn btn-primary" id="template-btn"
+              data-default-text="Upload Template" data-loading-text="Uploading…"
+              onclick="uploadTemplate()">
+        <span class="spinner" style="display:none;"></span>
+        <span class="btn-label">Upload Template</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Phase 2: Source files upload ──────────────────────────────────────── -->
+  <div class="phase" id="phase2">
+    <div class="info-box" style="margin-bottom:18px;">
+      <div class="info-title">Template active</div>
+      <div style="color:#166534;font-size:0.82rem;" id="active-template-badge">—</div>
+    </div>
+
+    <h2>Upload source files to convert</h2>
+    <p style="font-size:0.85rem;color:#718096;margin-bottom:14px;">
+      Select one or more files. Files with the same column headers are grouped together
+      and share a single mapping panel.
+    </p>
+
+    <div class="drop-zone" id="source-zone">
+      <input type="file" id="source-input" accept=".xlsx,.xlsm" multiple />
+      <div class="icon">📊</div>
+      <div class="label">Drag &amp; drop or <span>browse</span></div>
+      <div class="hint">.xlsx / .xlsm · multiple files allowed · max 50 MB each</div>
+    </div>
+
+    <div class="files-list" id="selected-files-list">No files chosen</div>
+
+    <div class="error-msg" id="source-error"></div>
+
+    <div class="btn-row">
+      <button class="btn btn-primary" id="preview-btn"
+              data-default-text="Preview Mapping →" data-loading-text="Analysing…"
+              onclick="previewMapping()">
+        <span class="spinner" style="display:none;"></span>
+        <span class="btn-label">Preview Mapping →</span>
+      </button>
+      <button class="btn btn-secondary" onclick="resetToPhase1()">Change Template</button>
+    </div>
+  </div>
+
+  <!-- ── Phase 3: Mapping panels ──────────────────────────────────────────── -->
+  <div class="phase" id="phase3">
+    <div class="mapping-controls">
+      <div class="mapping-summary" id="mapping-summary">Review and adjust column mappings below.</div>
+      <button class="btn btn-secondary btn-sm" onclick="resetToPhase2()">← Change Files</button>
+    </div>
+
+    <div id="mapping-container"><!-- rendered by JS --></div>
+
+    <div class="error-msg" id="mapping-error"></div>
+
+    <div class="btn-row" style="margin-top:20px;">
+      <button class="btn btn-primary" id="convert-btn"
+              data-default-text="Convert &amp; Download" data-loading-text="Converting…"
+              onclick="convertAll()">
+        <span class="spinner" style="display:none;"></span>
+        <span class="btn-label">Convert &amp; Download</span>
+      </button>
+      <button class="btn btn-secondary" onclick="resetToPhase2()">Back</button>
+    </div>
+  </div>
+
+  <!-- ── Phase 4: Result ───────────────────────────────────────────────────── -->
+  <div class="phase" id="phase4">
+    <div class="success-box">
+      <div class="check">✅</div>
+      <div class="success-msg">Conversion complete!</div>
+      <div class="success-sub" id="result-filename"></div>
+    </div>
+
+    <div class="warnings-box" id="warnings-box" style="display:none;">
+      <div class="warn-title">⚠ Column mapping notes</div>
+      <ul id="warnings-list"></ul>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="resetToPhase2()">Convert More Files</button>
+      <button class="btn btn-secondary" onclick="resetToPhase3()">Adjust Mapping</button>
+      <button class="btn btn-secondary" onclick="resetToPhase1()">Change Template</button>
+    </div>
+  </div>
+</div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>

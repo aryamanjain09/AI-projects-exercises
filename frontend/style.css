@@ -1,0 +1,210 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: #f0f4f8;
+  color: #1a202c;
+  min-height: 100vh;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 40px 16px 80px;
+}
+
+.card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+  padding: 40px;
+  width: 100%;
+  max-width: 760px;
+}
+
+h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 4px; }
+.subtitle { color: #718096; font-size: 0.9rem; margin-bottom: 28px; }
+
+/* ── Step indicator ─────────────────────────────────────────────────────────── */
+.steps { display: flex; margin-bottom: 32px; }
+.step {
+  flex: 1; text-align: center; font-size: 0.75rem; font-weight: 600;
+  padding: 8px 4px; border-bottom: 3px solid #e2e8f0; color: #a0aec0;
+  transition: all 0.2s; white-space: nowrap;
+}
+.step.active { color: #3b82f6; border-bottom-color: #3b82f6; }
+.step.done   { color: #10b981; border-bottom-color: #10b981; }
+
+/* ── Phases ──────────────────────────────────────────────────────────────────── */
+.phase { display: none; }
+.phase.visible { display: block; }
+h2 { font-size: 1.05rem; font-weight: 600; margin-bottom: 14px; }
+
+/* ── Drop zone ───────────────────────────────────────────────────────────────── */
+.drop-zone {
+  border: 2px dashed #cbd5e0; border-radius: 8px; padding: 28px 24px;
+  text-align: center; cursor: pointer; transition: border-color 0.2s, background 0.2s;
+  margin-bottom: 14px;
+}
+.drop-zone:hover, .drop-zone.drag-over { border-color: #3b82f6; background: #eff6ff; }
+.drop-zone input[type="file"] { display: none; }
+.drop-zone .icon { font-size: 1.8rem; margin-bottom: 6px; }
+.drop-zone .label { font-size: 0.88rem; color: #4a5568; }
+.drop-zone .label span { color: #3b82f6; font-weight: 600; }
+.drop-zone .hint { font-size: 0.78rem; color: #a0aec0; margin-top: 4px; }
+
+/* ── File list (multi-source) ────────────────────────────────────────────────── */
+.files-list {
+  min-height: 36px; max-height: 140px; overflow-y: auto;
+  font-size: 0.83rem; color: #4a5568;
+  background: #f7fafc; border: 1px solid #e2e8f0;
+  border-radius: 6px; padding: 8px 12px; margin-bottom: 14px;
+}
+.file-item { padding: 3px 0; display: flex; align-items: center; gap: 6px; }
+.file-size { color: #a0aec0; font-size: 0.78rem; }
+
+/* ── Buttons ─────────────────────────────────────────────────────────────────── */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 9px 20px; border-radius: 6px; border: none;
+  font-size: 0.88rem; font-weight: 600; cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+}
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn-primary   { background: #3b82f6; color: #fff; }
+.btn-primary:not(:disabled):hover { background: #2563eb; }
+.btn-secondary { background: #e2e8f0; color: #2d3748; }
+.btn-secondary:not(:disabled):hover { background: #cbd5e0; }
+.btn-sm { padding: 5px 12px; font-size: 0.78rem; }
+.btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+
+/* ── Info/warning/success boxes ──────────────────────────────────────────────── */
+.info-box {
+  background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px;
+  padding: 12px 16px; margin-bottom: 18px; font-size: 0.85rem;
+}
+.info-box .info-title { font-weight: 700; color: #166534; margin-bottom: 6px; }
+.col-list { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
+.col-tag {
+  background: #dcfce7; color: #15803d; border-radius: 4px;
+  padding: 2px 8px; font-size: 0.78rem; font-weight: 500;
+}
+
+.warnings-box {
+  background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px;
+  padding: 12px 16px; margin-bottom: 18px; font-size: 0.85rem;
+}
+.warnings-box .warn-title { font-weight: 700; color: #92400e; margin-bottom: 6px; }
+.warnings-box ul { padding-left: 18px; color: #78350f; }
+.warnings-box li { margin-bottom: 3px; }
+
+.success-box {
+  background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px;
+  padding: 20px; text-align: center; margin-bottom: 18px;
+}
+.success-box .check { font-size: 2.5rem; }
+.success-box .success-msg { font-weight: 700; font-size: 1rem; color: #166534; margin-top: 8px; }
+.success-box .success-sub { color: #4a5568; font-size: 0.85rem; margin-top: 4px; }
+
+.error-msg { color: #c53030; font-size: 0.85rem; margin-top: 8px; display: none; }
+.error-msg.visible { display: block; }
+
+/* ── Spinner ─────────────────────────────────────────────────────────────────── */
+.spinner {
+  display: inline-block; width: 14px; height: 14px;
+  border: 2px solid rgba(255,255,255,0.4); border-top-color: #fff;
+  border-radius: 50%; animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Mapping panels ──────────────────────────────────────────────────────────── */
+.group-panel {
+  border: 1px solid #e2e8f0; border-radius: 10px;
+  padding: 20px; margin-bottom: 20px;
+}
+.group-header {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  flex-wrap: wrap; gap: 8px; margin-bottom: 14px;
+}
+.group-badge {
+  display: inline-block; background: #dbeafe; color: #1d4ed8;
+  border-radius: 4px; padding: 2px 8px; font-size: 0.75rem;
+  font-weight: 700; margin-right: 6px;
+}
+.group-files { font-size: 0.82rem; color: #4a5568; word-break: break-all; }
+.map-count {
+  font-size: 0.78rem; font-weight: 600; padding: 3px 8px;
+  border-radius: 4px; background: #dcfce7; color: #15803d;
+}
+.map-count.has-unmapped { background: #fef9c3; color: #854d0e; }
+
+/* Mapping table */
+.mapping-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin-bottom: 12px; }
+.mapping-table th {
+  text-align: left; font-size: 0.75rem; font-weight: 600;
+  color: #718096; padding: 6px 8px;
+  border-bottom: 2px solid #e2e8f0;
+}
+.mapping-table td { padding: 5px 8px; border-bottom: 1px solid #f0f4f8; vertical-align: middle; }
+.mapping-table tr:last-child td { border-bottom: none; }
+.mapping-table tr:hover td { background: #f7fafc; }
+
+/* Column name cells */
+.col-name-fixed {
+  font-size: 0.85rem; font-weight: 500; padding: 3px 0;
+  display: inline-block;
+}
+.col-name-fixed.mapped   { color: #1d4ed8; }
+.col-name-fixed.unmapped { color: #b45309; }
+
+.col-name-input {
+  border: 1px solid #cbd5e0; border-radius: 4px; padding: 4px 8px;
+  font-size: 0.83rem; width: 100%; max-width: 180px;
+  outline: none; transition: border-color 0.15s;
+}
+.col-name-input:focus { border-color: #3b82f6; }
+
+/* Arrow column */
+.arrow { font-size: 1rem; display: block; text-align: center; }
+.mapped-arrow { color: #3b82f6; }
+.empty-arrow  { color: #cbd5e0; }
+
+/* Source dropdown */
+.mapping-table select {
+  border: 1px solid #cbd5e0; border-radius: 4px; padding: 4px 6px;
+  font-size: 0.83rem; background: #fff; width: 100%; max-width: 220px;
+  outline: none; cursor: pointer; transition: border-color 0.15s;
+}
+.mapping-table select:focus { border-color: #3b82f6; }
+
+/* Delete button */
+.btn-icon-del {
+  background: none; border: none; color: #fc8181; cursor: pointer;
+  font-size: 0.85rem; padding: 4px 6px; border-radius: 4px;
+  transition: background 0.15s, color 0.15s;
+}
+.btn-icon-del:hover { background: #fff5f5; color: #e53e3e; }
+
+/* Unused columns hint */
+.unused-cols {
+  font-size: 0.78rem; color: #718096; margin-bottom: 10px;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 4px;
+}
+.unused-tag {
+  background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 3px;
+  padding: 1px 6px; font-size: 0.75rem; color: #64748b;
+}
+
+/* Add column button */
+.btn-add {
+  background: none; border: 1px dashed #94a3b8; border-radius: 6px;
+  color: #64748b; font-size: 0.8rem; font-weight: 600; padding: 6px 14px;
+  cursor: pointer; transition: border-color 0.15s, color 0.15s, background 0.15s;
+  width: 100%;
+}
+.btn-add:hover { border-color: #3b82f6; color: #2563eb; background: #eff6ff; }
+
+/* Mapping phase controls bar */
+.mapping-controls {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 20px; flex-wrap: wrap; gap: 10px;
+}
+.mapping-summary { font-size: 0.85rem; color: #4a5568; }
