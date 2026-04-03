@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Excel Template Converter</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+<div class="card">
+  <h1>Excel Template Converter</h1>
+  <p class="subtitle">Convert any Excel file to match your template — same structure, same column order.</p>
+
+  <!-- Step indicators -->
+  <div class="steps">
+    <div class="step active" id="step1">1 · Upload Template</div>
+    <div class="step" id="step2">2 · Convert File</div>
+    <div class="step" id="step3">3 · Download</div>
+  </div>
+
+  <!-- ── Phase 1: Template upload ───────────────────────────────────────── -->
+  <div class="phase" id="phase1">
+    <h2>Upload your template Excel file</h2>
+    <p style="font-size:0.85rem;color:#718096;margin-bottom:16px;">
+      The template defines the column headers, their order, and any leading blank rows/columns.
+      All source files will be converted to match this structure.
+    </p>
+
+    <div class="drop-zone" id="template-zone">
+      <input type="file" id="template-input" accept=".xlsx,.xlsm" />
+      <div class="icon">📄</div>
+      <div class="label">Drag &amp; drop or <span>browse</span></div>
+      <div class="label" style="color:#a0aec0;font-size:0.8rem;">.xlsx / .xlsm · max 10 MB</div>
+      <div class="selected-file" id="template-file-label">No file chosen</div>
+    </div>
+
+    <div id="template-info" class="info-box" style="display:none;"></div>
+    <div class="error-msg" id="template-error"></div>
+
+    <div class="btn-row">
+      <button class="btn btn-primary" id="template-btn"
+              data-default-text="Upload Template"
+              data-loading-text="Uploading…"
+              onclick="uploadTemplate()">
+        <span class="spinner" style="display:none;"></span>
+        <span class="btn-label">Upload Template</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Phase 2: Convert ───────────────────────────────────────────────── -->
+  <div class="phase" id="phase2">
+    <div class="info-box" style="margin-bottom:20px;">
+      <div class="info-title" id="active-template-name">Template loaded</div>
+      <div style="color:#166534;font-size:0.82rem;">
+        Upload a source file below. Columns are matched by exact header name.
+      </div>
+    </div>
+
+    <h2>Upload source file to convert</h2>
+
+    <div class="drop-zone" id="source-zone">
+      <input type="file" id="source-input" accept=".xlsx,.xlsm" />
+      <div class="icon">📊</div>
+      <div class="label">Drag &amp; drop or <span>browse</span></div>
+      <div class="label" style="color:#a0aec0;font-size:0.8rem;">.xlsx / .xlsm · max 10 MB</div>
+      <div class="selected-file" id="source-file-label">No file chosen</div>
+    </div>
+
+    <div class="error-msg" id="convert-error"></div>
+
+    <div class="btn-row">
+      <button class="btn btn-primary" id="convert-btn"
+              data-default-text="Convert &amp; Download"
+              data-loading-text="Converting…"
+              onclick="convertFile()">
+        <span class="spinner" style="display:none;"></span>
+        <span class="btn-label">Convert &amp; Download</span>
+      </button>
+      <button class="btn btn-secondary" onclick="resetToPhase1()">Change Template</button>
+    </div>
+  </div>
+
+  <!-- ── Phase 3: Result ────────────────────────────────────────────────── -->
+  <div class="phase" id="phase3">
+    <div class="success-box">
+      <div class="check">✅</div>
+      <div class="success-msg">Conversion complete!</div>
+      <div class="success-sub" id="result-filename"></div>
+    </div>
+
+    <div class="warnings-box" id="warnings-box" style="display:none;">
+      <div class="warn-title">⚠ Column mapping warnings</div>
+      <ul id="warnings-list"></ul>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="resetToPhase2()">Convert Another File</button>
+      <button class="btn btn-secondary" onclick="resetToPhase1()">Change Template</button>
+    </div>
+  </div>
+</div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>
