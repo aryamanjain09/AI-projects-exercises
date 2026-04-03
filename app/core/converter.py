@@ -3,107 +3,91 @@ import io
 from openpyxl import load_workbook
 from openpyxl.worksheet.worksheet import Worksheet
 
-from app.core.session_store import TemplateMetadata
-from app.core.template_parser import count_leading_blank_rows, count_leading_blank_cols
-
-
-def _parse_source(source_bytes: bytes) -> tuple[int, int, dict[str, int]]:
-    """
-    Parse a source .xlsx file and return:
-      (header_row, leading_blank_cols, col_name_to_1based_col_index)
-    Uses the same blank-detection logic as the template parser.
-    """
-    wb = load_workbook(io.BytesIO(source_bytes), data_only=True)
-    ws = wb.active
-
-    if ws is None or not ws.max_row or not ws.max_column:
-        raise ValueError("Source sheet has no data")
-
-    blank_rows = count_leading_blank_rows(ws)
-    header_row = blank_rows + 1
-
-    if header_row > ws.max_row:
-        raise ValueError("Source sheet has no data")
-
-    blank_cols = count_leading_blank_cols(ws, header_row)
-
-    col_map: dict[str, int] = {}
-    col = blank_cols + 1
-    while col <= ws.max_column:
-        val = ws.cell(row=header_row, column=col).value
-        if val is None:
-            break
-        name = str(val)
-        if name not in col_map:  # keep first occurrence on duplicate source headers
-            col_map[name] = col
-        col += 1
-
-    return header_row, blank_cols, col_map
+from app.core.session_store import SourceFileMeta, TemplateMetadata
+from app.models.schemas import ColumnMapping
 
 
 def _clear_data_rows(ws: Worksheet, header_row: int) -> None:
-    """Set all cell values below the header row to None (preserves styles)."""
-    if ws.max_row is None or ws.max_column is None:
+    """Set all cell values below the header row to None (preserves cell styles)."""
+    if not ws.max_row or not ws.max_column:
         return
     for row in ws.iter_rows(min_row=header_row + 1):
         for cell in row:
             cell.value = None
 
 
-def convert(source_bytes: bytes, meta: TemplateMetadata) -> tuple[bytes, list[str]]:
+def convert_with_mapping(
+    source_file_meta: SourceFileMeta,
+    source_bytes: bytes,
+    template_meta: TemplateMetadata,
+    mapping: list[ColumnMapping],
+) -> tuple[bytes, list[str]]:
     """
-    Convert a source .xlsx to match the template structure.
+    Convert one source file to the template structure using the provided mapping.
+
+    - Source is loaded in read_only mode for memory-efficient handling of large files.
+    - Template is loaded fresh each time so all styles, column widths, freeze panes,
+      and other formatting are preserved in the output.
+    - Extra columns (is_extra=True) are appended after the template columns.
+
     Returns (output_xlsx_bytes, warnings).
     """
-    # Load a fresh copy of the template to preserve all styles
-    out_wb = load_workbook(io.BytesIO(meta.template_wb_bytes))
+    # Load template fresh — inherits all styles/widths/formatting
+    out_wb = load_workbook(io.BytesIO(template_meta.template_wb_bytes))
     out_ws = out_wb.active
-
-    # Load source (values only for reading)
-    src_wb = load_workbook(io.BytesIO(source_bytes), data_only=True)
-    src_ws = src_wb.active
-
     if out_ws is None:
         raise ValueError("Template workbook has no active sheet")
+
+    # Clear any sample data rows that may exist in the template
+    _clear_data_rows(out_ws, template_meta.header_row)
+
+    # Write extra column headers beyond the template's own columns
+    extra_mappings = [m for m in mapping if m.is_extra]
+    if extra_mappings:
+        extra_start_col = template_meta.header_col_start + len(template_meta.column_names)
+        for i, m in enumerate(extra_mappings):
+            out_ws.cell(
+                row=template_meta.header_row,
+                column=extra_start_col + i,
+            ).value = m.output_col
+
+    # Load source in read_only mode — does not load all rows into memory at once
+    src_wb = load_workbook(io.BytesIO(source_bytes), data_only=True, read_only=True)
+    src_ws = src_wb.active
     if src_ws is None:
+        src_wb.close()
         raise ValueError("Source workbook has no active sheet")
 
-    src_header_row, _src_blank_cols, src_col_map = _parse_source(source_bytes)
-
-    # Clear existing data rows in the output (template may have sample data)
-    _clear_data_rows(out_ws, meta.header_row)
-
-    template_columns = meta.column_names
-    template_col_set = set(template_columns)
-    source_col_set = set(src_col_map.keys())
-
+    col_to_idx = source_file_meta.col_name_to_row_index
+    out_row = template_meta.header_row + 1
     warnings: list[str] = []
-    for name in source_col_set - template_col_set:
-        warnings.append(f"Source column '{name}' not in template — dropped")
-    for name in template_col_set - source_col_set:
-        warnings.append(f"Template column '{name}' not found in source — left blank")
 
-    # Write data rows
-    out_row = meta.header_row + 1
-    src_max_row = src_ws.max_row or 0
+    try:
+        # iter_rows in read_only mode is a generator — rows are never all in memory
+        for src_row in src_ws.iter_rows(
+            min_row=source_file_meta.header_row + 1,
+            values_only=True,
+        ):
+            # Skip entirely blank rows
+            if not any(v is not None for v in src_row):
+                continue
 
-    for src_row_idx in range(src_header_row + 1, src_max_row + 1):
-        # Read the entire source row as a dict: col_index -> value
-        src_row_vals: dict[int, object] = {}
-        for cell in src_ws[src_row_idx]:
-            src_row_vals[cell.column] = cell.value
+            for col_offset, col_map in enumerate(mapping):
+                out_col = template_meta.header_col_start + col_offset
+                if col_map.source_col is None:
+                    value = None
+                else:
+                    idx = col_to_idx.get(col_map.source_col)
+                    value = (
+                        src_row[idx]
+                        if idx is not None and idx < len(src_row)
+                        else None
+                    )
+                out_ws.cell(row=out_row, column=out_col).value = value
 
-        # Check if the source row is entirely blank — skip it
-        if not any(v is not None for v in src_row_vals.values()):
-            continue
-
-        for t_col_offset, col_name in enumerate(template_columns):
-            out_col = meta.header_col_start + t_col_offset
-            src_col_idx = src_col_map.get(col_name)
-            value = src_row_vals.get(src_col_idx) if src_col_idx is not None else None
-            out_ws.cell(row=out_row, column=out_col).value = value
-
-        out_row += 1
+            out_row += 1
+    finally:
+        src_wb.close()
 
     buf = io.BytesIO()
     out_wb.save(buf)
