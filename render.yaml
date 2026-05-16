@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: excel-template-converter
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
