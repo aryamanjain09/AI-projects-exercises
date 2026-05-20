@@ -1,10 +1,14 @@
-'use client'
-
 import './globals.css'
+import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
-import { Toaster } from '@/components/ui/Toaster'
+import { ToasterProvider } from '@/components/ui/ToasterProvider'
 
 const inter = Inter({ subsets: ['latin'] })
+
+export const metadata: Metadata = {
+  title: 'Blood Report Tracker',
+  description: 'Track and analyze your blood test results over time',
+}
 
 export default function RootLayout({
   children,
@@ -13,13 +17,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <head>
-        <title>Blood Report Tracker</title>
-        <meta name="description" content="Track and analyze your blood test results over time" />
-      </head>
       <body className={`${inter.className} min-h-screen bg-gray-50 antialiased`}>
         {children}
-        <Toaster />
+        <ToasterProvider />
       </body>
     </html>
   )
